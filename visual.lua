@@ -586,4 +586,172 @@ FeaturesDivider.Parent = StatsFrame
 -- Update time
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
-        timeStat.Text = os.da
+        timeStat.Text = os.date("%H:%M:%S")
+        task.wait(1)
+    end
+end)
+
+-- ========== LOG MESSAGES ==========
+local logLines = {}
+local logIndex = 0
+
+local logMessages = {
+    {txt = "[BYPASS] > Bypassing security layer 1...", color = Color3.fromRGB(255, 80, 80)},
+    {txt = "[BYPASS] > Security layer 1 bypassed [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[PROCESS] > Processing authentication tokens...", color = Color3.fromRGB(255, 70, 70)},
+    {txt = "[PROCESS] > Tokens validated [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[BYPASS] > Bypassing security layer 2...", color = Color3.fromRGB(255, 80, 80)},
+    {txt = "[BYPASS] > Security layer 2 bypassed [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[PROCESS] > Processing encryption keys...", color = Color3.fromRGB(255, 70, 70)},
+    {txt = "[PROCESS] > Keys decrypted [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[BYPASS] > Bypassing firewall...", color = Color3.fromRGB(255, 80, 80)},
+    {txt = "[BYPASS] > Firewall bypassed [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[PROCESS] > Processing payload injection...", color = Color3.fromRGB(255, 70, 70)},
+    {txt = "[PROCESS] > Payload injected [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[BYPASS] > Bypassing detection system...", color = Color3.fromRGB(255, 80, 80)},
+    {txt = "[BYPASS] > Detection bypassed [SUCCESS]", color = Color3.fromRGB(255, 120, 120)},
+    {txt = "[PROCESS] > Finalizing connection...", color = Color3.fromRGB(255, 70, 70)},
+    {txt = "[PROCESS] > Connection established [READY]", color = Color3.fromRGB(255, 120, 120)},
+}
+
+local function addLog(msg, color)
+    logIndex = logIndex + 1
+    local line = Instance.new("TextLabel")
+    line.Size = UDim2.new(1, 0, 0, 14)
+    line.BackgroundTransparency = 1
+    line.Text = "> " .. msg
+    line.TextColor3 = color or Color3.fromRGB(220, 70, 70)
+    line.TextSize = 9
+    line.Font = Enum.Font.Code
+    line.TextXAlignment = Enum.TextXAlignment.Left
+    line.LayoutOrder = logIndex
+    line.ZIndex = 4
+    line.Parent = LogContainer
+    
+    table.insert(logLines, line)
+    
+    if #logLines > 12 then
+        local old = table.remove(logLines, 1)
+        old:Destroy()
+    end
+end
+
+-- ========== PROGRESS SIMULATION ==========
+local progress = 0
+
+local steps = {
+    {target = 8, speed = 0.6},
+    {target = 18, speed = 0.8},
+    {target = 29, speed = 1.0},
+    {target = 41, speed = 1.3},
+    {target = 55, speed = 1.6},
+    {target = 67, speed = 1.9},
+    {target = 76, speed = 2.2},
+    {target = 84, speed = 2.6},
+    {target = 91, speed = 3.0},
+    {target = 94.7, speed = 3.5},
+    {target = 96.2, speed = 4.0},
+}
+
+local function updateCircularProgress(pct)
+    PercentText.Text = string.format("%.1f%%", pct)
+    
+    local intensity = 60 + (pct / 100) * 195
+    CenterRing.BorderColor3 = Color3.fromRGB(255, intensity, intensity)
+    RingGlow.BackgroundColor3 = Color3.fromRGB(255, intensity * 0.8, intensity * 0.8)
+    
+    if pct < 30 then
+        StatusText.Text = "BYPASSING..."
+    elseif pct < 60 then
+        StatusText.Text = "PROCESSING..."
+    elseif pct < 85 then
+        StatusText.Text = "INJECTING..."
+    else
+        StatusText.Text = "FINALIZING"
+    end
+end
+
+-- Start progress animation
+task.spawn(function()
+    for _, step in ipairs(steps) do
+        while progress < step.target do
+            progress = math.min(progress + 0.3, step.target)
+            updateCircularProgress(progress)
+            task.wait(step.speed * 0.1)
+        end
+        task.wait(step.speed * 0.3)
+    end
+    
+    PercentText.Text = "96.2%"
+    StatusText.Text = "AWAITING SIGNAL"
+    print("[Mystryx] Loading halted at 96.2% - Signal pending")
+end)
+
+-- Log animation
+task.spawn(function()
+    for i = 1, 5 do
+        local log = logMessages[i]
+        if log then
+            task.wait(0.8)
+            addLog(log.txt, log.color)
+        end
+    end
+    
+    local logIndexLoop = 1
+    while ScreenGui and ScreenGui.Parent do
+        task.wait(math.random(2, 4) * 0.3)
+        local log = logMessages[logIndexLoop]
+        if log then
+            addLog(log.txt, log.color)
+        end
+        logIndexLoop = logIndexLoop + 1
+        if logIndexLoop > #logMessages then
+            logIndexLoop = 1
+        end
+    end
+end)
+
+-- Pulse animation on center ring
+task.spawn(function()
+    local pulseTime = 0
+    while ScreenGui and ScreenGui.Parent do
+        pulseTime = pulseTime + 0.033
+        local scale = 1 + math.sin(pulseTime * 3) * 0.02
+        CenterRing.Size = UDim2.new(0, 220 * scale, 0, 220 * scale)
+        CenterRing.Position = UDim2.new(0.5, -110 * scale, 0.5, -110 * scale)
+        task.wait()
+    end
+end)
+
+-- Entry animations
+Background.BackgroundTransparency = 1
+TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+TweenService:Create(CenterRing, TweenInfo.new(0.6, Enum.EasingStyle.Back), {Size = UDim2.new(0, 220, 0, 220)}):Play()
+TweenService:Create(LeftPanel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 20, 0, 20)}):Play()
+TweenService:Create(Sidebar, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -340, 0, 20)}):Play()
+
+-- Fade in orbs
+for _, orb in ipairs(orbs) do
+    orb.obj.BackgroundTransparency = 0.6
+    TweenService:Create(orb.obj, TweenInfo.new(1), {BackgroundTransparency = 0.4}):Play()
+end
+
+-- Fade in texts
+CreditText.TextTransparency = 1
+TweenService:Create(CreditText, TweenInfo.new(1), {TextTransparency = 0}):Play()
+
+FeaturesText.TextTransparency = 1
+TweenService:Create(FeaturesText, TweenInfo.new(1.2), {TextTransparency = 0}):Play()
+
+-- Click blocker
+local Blocker = Instance.new("TextButton")
+Blocker.Size = UDim2.new(1, 0, 1, 0)
+Blocker.BackgroundTransparency = 1
+Blocker.Text = ""
+Blocker.ZIndex = 0
+Blocker.Parent = ScreenGui
+
+print("[Mystryx] Loading screen initialized successfully!")
+print("[Mystryx] Subtitle: BEST PVP ETFB SCRIPT")
+print("[Mystryx] Credit: MADE BY SUMMER SCRIPT")
+print("[Mystryx] Features: ESP CANDY, AUTO FARM, AUTO TOWER TRIAL, AUTO ARENA TSUNAMI, ETC.")
